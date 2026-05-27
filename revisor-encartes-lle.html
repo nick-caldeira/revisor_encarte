@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Revisor de Encartes — Grupo LLE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #E24B4A;
+      --red-light: #FCEBEB;
+      --red-mid: #F09595;
+      --green: #1D9E75;
+      --green-light: #E1F5EE;
+      --blue: #378ADD;
+      --blue-light: #E6F1FB;
+      --gray-50: #F8F7F5;
+      --gray-100: #F1EFE8;
+      --gray-200: #D3D1C7;
+      --gray-400: #888780;
+      --gray-700: #444441;
+      --gray-900: #2C2C2A;
+      --border: rgba(0,0,0,0.10);
+      --border-md: rgba(0,0,0,0.18);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px 80px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    /* Header */
+    .header { margin-bottom: 2.5rem; }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 0.5px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 12px 4px 8px;
+      margin-bottom: 20px;
+    }
+    .brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+    .brand-name { font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gray-400); }
+    h1 { font-size: 28px; font-weight: 500; color: var(--gray-900); line-height: 1.2; margin-bottom: 8px; }
+    .subtitle { font-size: 14px; color: var(--gray-400); line-height: 1.6; max-width: 480px; }
+
+    /* Upload grid */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 520px) {
+      .upload-grid { grid-template-columns: 1fr; }
+    }
+
+    .upload-card {
+      background: white;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      position: relative;
+      user-select: none;
+    }
+    .upload-card:hover { border-color: var(--border-md); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .upload-card.has-file { border-color: var(--green); border-width: 1px; }
+    .upload-card.active { border-color: var(--blue); border-width: 1px; }
+
+    .card-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-400);
+      margin-bottom: 10px;
+    }
+    .card-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 10px;
+      font-size: 19px;
+    }
+    .card-icon.xlsx { background: #EAF3DE; color: #3B6D11; }
+    .card-icon.pdf  { background: #FAECE7; color: #993C1D; }
+
+    .card-title { font-size: 14px; font-weight: 500; color: var(--gray-900); margin-bottom: 3px; }
+    .card-desc  { font-size: 12px; color: var(--gray-400); line-height: 1.5; }
+
+    .drop-zone {
+      border: 1.5px dashed var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 14px 10px;
+      text-align: center;
+      margin-top: 14px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .drop-zone.drag-over {
+      background: var(--gray-100);
+      border-color: var(--blue);
+    }
+    .drop-text { font-size: 12px; color: var(--gray-400); }
+    .drop-link { color: var(--blue); cursor: pointer; }
+
+    input[type="file"] { display: none; }
+
+    .file-list { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+    .file-item {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      padding: 5px 9px;
+    }
+    .file-item i { font-size: 13px; color: var(--gray-400); flex-shrink: 0; }
+    .file-item-name {
+      font-size: 12px; color: var(--gray-700);
+      flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .file-item-remove {
+      cursor: pointer; color: var(--gray-400); font-size: 15px; flex-shrink: 0; line-height: 1;
+      transition: color 0.1s;
+    }
+    .file-item-remove:hover { color: var(--red); }
+
+    /* Divider */
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 1.5rem 0; }
+
+    /* Checklist */
+    .section-label {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--gray-400);
+      margin-bottom: 12px;
+    }
+    .checklist { display: flex; flex-direction: column; gap: 7px; margin-bottom: 24px; }
+    .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--gray-700); }
+    .check-num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--red); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 500; flex-shrink: 0;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* CTA */
+    .cta-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .cta-btn:hover:not(:disabled) { opacity: 0.88; }
+    .cta-btn:active:not(:disabled) { transform: scale(0.99); }
+    .cta-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Status */
+    .status-bar {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--gray-400);
+      margin-top: 12px;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-200); transition: background 0.3s; }
+    .status-dot.ready { background: var(--green); }
+
+    /* Result panel */
+    .result-panel {
+      display: none;
+      margin-top: 2rem;
+      background: white;
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .result-panel.visible { display: block; }
+    .result-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .result-header-title { font-size: 14px; font-weight: 500; color: var(--gray-900); }
+    .result-badge {
+      font-size: 11px; font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+    .badge-ok    { background: var(--green-light); color: #085041; }
+    .badge-warn  { background: #FAEEDA; color: #633806; }
+    .badge-error { background: var(--red-light); color: #501313; }
+
+    .result-body { padding: 1.25rem; }
+    .result-loading {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--gray-400);
+    }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--gray-200);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divergencia-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .divergencia-table th {
+      text-align: left; font-size: 10px; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--gray-400); padding: 0 8px 8px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .divergencia-table td { padding: 10px 8px 10px 0; border-bottom: 0.5px solid var(--border); vertical-align: top; color: var(--gray-700); }
+    .divergencia-table tr:last-child td { border-bottom: none; }
+    .campo-pill {
+      display: inline-block; font-size: 11px; font-weight: 500;
+      padding: 2px 8px; border-radius: 100px;
+      background: var(--red-light); color: #791F1F;
+    }
+    .valor-errado { color: var(--red); text-decoration: line-through; font-family: 'DM Mono', monospace; font-size: 12px; }
+    .valor-certo  { color: var(--green); font-family: 'DM Mono', monospace; font-size: 12px; }
+    .no-divergencias {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #085041;
+      background: var(--green-light);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+    }
+    .no-divergencias i { font-size: 18px; color: var(--green); }
+
+    .instructions {
+      background: var(--gray-100);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .inst-title { font-size: 13px; font-weight: 500; color: var(--gray-700); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .inst-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .inst-list li { font-size: 12px; color: var(--gray-400); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+    .inst-list li::before { content: '→'; flex-shrink: 0; color: var(--gray-200); margin-top: 1px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-dot"></div>
+      <span class="brand-name">Grupo LLE · Materiais de Construção</span>
+    </div>
+    <h1>Revisor de Encartes</h1>
+    <p class="subtitle">Envie a planilha base e os encartes para identificar divergências automaticamente.</p>
+  </div>
+
+  <div class="upload-grid">
+
+    <div class="upload-card" id="card-planilha" onclick="document.getElementById('input-planilha').click()">
+      <div class="card-label">Campo 1</div>
+      <div class="card-icon xlsx"><i class="ti ti-table" aria-hidden="true"></i></div>
+      <div class="card-title">Planilha base</div>
+      <div class="card-desc">Dados oficiais dos produtos para comparação</div>
+      <div class="drop-zone" id="drop-planilha">
+        <p class="drop-text"><span class="drop-link">Escolher arquivo</span> ou arrastar</p>
+        <p class="drop-text" style="margin-top:3px; font-size:11px;">.xlsx · .xls · .csv</p>
+      </div>
+      <div class="file-list" id="list-planilha"></div>
+      <input type="file" id="input-planilha" accept=".xlsx,.xls,.csv" />
+    </div>
+
+    <div class="upload-card" id="card-encartes" onclick="document.getElementById('input-encartes').click()">
+      <div class="card-label">Campo 2</div>
+      <div class="card-icon pdf"><i class="ti ti-files" aria-hidden="true"></i></div>
+      <div class="card-title">Encartes / Folhetos</div>
+      <div class="card-desc">Materiais a serem revisados contra a planilha</div>
+      <div class="drop-zone" id="drop-encartes">
+        <p class="drop-text"><span class="drop-link">Escolher arquivos</span> ou arrastar</p>
+        <p class="drop-text" style="margin-top:3px; font-size:11px;">.pdf · .jpg · .png</p>
+      </div>
+      <div class="file-list" id="list-encartes"></div>
+      <input type="file" id="input-encartes" accept=".pdf,.jpg,.jpeg,.png" multiple />
+    </div>
+
+  </div>
+
+  <hr class="divider" />
+
+  <p class="section-label">Critérios de revisão</p>
+  <div class="checklist">
+    <div class="check-item"><div class="check-num">1</div>Código do produto</div>
+    <div class="check-item"><div class="check-num">2</div>Descrição do item</div>
+    <div class="check-item"><div class="check-num">3</div>Preço anunciado</div>
+    <div class="check-item"><div class="check-num">4</div>Imagem do produto</div>
+    <div class="check-item"><div class="check-num">5</div>Tag preço único</div>
+  </div>
+
+  <button class="cta-btn" id="btn-analisar" disabled onclick="analisar()">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    Iniciar revisão
+  </button>
+
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-msg">Aguardando arquivos para iniciar a análise</span>
+  </div>
+
+  <!-- Result panel (populated after analysis) -->
+  <div class="result-panel" id="result-panel">
+    <div class="result-header">
+      <span class="result-header-title" id="result-title">Resultado da análise</span>
+      <span class="result-badge" id="result-badge"></span>
+    </div>
+    <div class="result-body" id="result-body">
+      <div class="result-loading">
+        <div class="spinner"></div>
+        Analisando arquivos…
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <div class="inst-title"><i class="ti ti-info-circle" aria-hidden="true" style="font-size:16px;color:var(--gray-400)"></i> Como usar</div>
+    <ul class="inst-list">
+      <li>Carregue a planilha base com os dados oficiais dos produtos (código, descrição, preço)</li>
+      <li>Adicione um ou mais encartes em PDF ou imagem para revisão</li>
+      <li>Clique em "Iniciar revisão" — o sistema comparará cada item dos encartes com a planilha</li>
+      <li>As divergências serão listadas com o valor encontrado e o valor correto</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  const state = { planilha: null, encartes: [] };
+
+  // ── File input handlers ──────────────────────────────────────────────────
+
+  document.getElementById('input-planilha').addEventListener('change', function (e) {
+    e.stopPropagation();
+    const f = this.files[0];
+    if (!f) return;
+    state.planilha = f;
+    document.getElementById('list-planilha').innerHTML = '';
+    addFileItem('list-planilha', f.name, () => {
+      state.planilha = null;
+      document.getElementById('card-planilha').classList.remove('has-file');
+      updateStatus();
+    });
+    document.getElementById('card-planilha').classList.add('has-file');
+    updateStatus();
+  });
+
+  document.getElementById('input-encartes').addEventListener('change', function (e) {
+    e.stopPropagation();
+    Array.from(this.files).forEach(f => {
+      if (state.encartes.find(x => x.name === f.name)) return;
+      state.encartes.push(f);
+      addFileItem('list-encartes', f.name, (item) => {
+        const idx = state.encartes.findIndex(x => x.name === f.name);
+        if (idx > -1) state.encartes.splice(idx, 1);
+        item.remove();
+        if (state.encartes.length === 0) document.getElementById('card-encartes').classList.remove('has-file');
+        updateStatus();
+      });
+    });
+    if (state.encartes.length > 0) document.getElementById('card-encartes').classList.add('has-file');
+    updateStatus();
+  });
+
+  // ── Drag & drop ──────────────────────────────────────────────────────────
+
+  ['drop-planilha', 'drop-encartes'].forEach(id => {
+    const zone = document.getElementById(id);
+    zone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', e => { e.stopPropagation(); zone.classList.remove('drag-over'); });
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (id === 'drop-planilha' && files[0]) {
+        const dt = new DataTransfer(); dt.items.add(files[0]);
+        document.getElementById('input-planilha').files = dt.files;
+        document.getElementById('input-planilha').dispatchEvent(new Event('change'));
+      } else if (id === 'drop-encartes' && files.length) {
+        const dt = new DataTransfer();
+        Array.from(files).forEach(f => dt.items.add(f));
+        document.getElementById('input-encartes').files = dt.files;
+        document.getElementById('input-encartes').dispatchEvent(new Event('change'));
+      }
+    });
+  });
+
+  // ── UI helpers ───────────────────────────────────────────────────────────
+
+  function addFileItem(listId, name, onRemove) {
+    const list = document.getElementById(listId);
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    item.innerHTML = `<i class="ti ti-file" aria-hidden="true"></i><span class="file-item-name" title="${name}">${name}</span><span class="file-item-remove" title="Remover">×</span>`;
+    item.querySelector('.file-item-remove').addEventListener('click', e => { e.stopPropagation(); onRemove(item); updateStatus(); });
+    list.appendChild(item);
+  }
+
+  function updateStatus() {
+    const hasPlanilha = !!state.planilha;
+    const hasEncartes = state.encartes.length > 0;
+    const ready = hasPlanilha && hasEncartes;
+    document.getElementById('btn-analisar').disabled = !ready;
+    document.getElementById('status-dot').className = 'status-dot' + (ready ? ' ready' : '');
+    const msg = document.getElementById('status-msg');
+    if (ready) msg.textContent = `Pronto — 1 planilha · ${state.encartes.length} encarte(s)`;
+    else if (hasPlanilha) msg.textContent = 'Planilha carregada · Aguardando encartes';
+    else if (hasEncartes) msg.textContent = `${state.encartes.length} encarte(s) · Aguardando planilha base`;
+    else msg.textContent = 'Aguardando arquivos para iniciar a análise';
+  }
+
+  // ── Analysis (placeholder — connect your backend or Claude API here) ──────
+
+  function analisar() {
+    const panel = document.getElementById('result-panel');
+    const body  = document.getElementById('result-body');
+    const badge = document.getElementById('result-badge');
+    const title = document.getElementById('result-title');
+
+    panel.classList.add('visible');
+    badge.className = 'result-badge';
+    badge.textContent = '';
+    title.textContent = 'Analisando…';
+    body.innerHTML = `<div class="result-loading"><div class="spinner"></div>Processando ${state.encartes.length} encarte(s) contra a planilha…</div>`;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // ── Simulação de resultado (substitua pela chamada real à sua API) ────────
+    setTimeout(() => {
+      const divergencias = [
+        { item: 'Cimento CP II 50kg', campo: 'Preço', encarte: 'R$ 38,90', correto: 'R$ 41,50' },
+        { item: 'Argamassa AC II 20kg', campo: 'Código', encarte: '7891234', correto: '7891235' },
+        { item: 'Tijolo Cerâmico 6 furos', campo: 'Descrição', encarte: 'Tijolo 6F Cerâmico', correto: 'Tijolo Cerâmico 6 Furos — 9x14x19cm' },
+      ];
+
+      title.textContent = 'Resultado da análise';
+
+      if (divergencias.length === 0) {
+        badge.className = 'result-badge badge-ok';
+        badge.textContent = 'Sem divergências';
+        body.innerHTML = `<div class="no-divergencias"><i class="ti ti-circle-check" aria-hidden="true"></i>Nenhuma divergência encontrada. Todos os itens estão corretos.</div>`;
+      } else {
+        badge.className = 'result-badge badge-error';
+        badge.textContent = `${divergencias.length} divergência(s)`;
+        let rows = divergencias.map(d => `
+          <tr>
+            <td>${d.item}</td>
+            <td><span class="campo-pill">${d.campo}</span></td>
+            <td>
+              <span class="valor-errado">${d.encarte}</span><br/>
+              <span class="valor-certo">${d.correto}</span>
+            </td>
+          </tr>`).join('');
+        body.innerHTML = `
+          <table class="divergencia-table">
+            <thead><tr><th>Item</th><th>Campo</th><th>Encarte → Correto</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      }
+    }, 2200);
+    // ── Fim da simulação ─────────────────────────────────────────────────────
+  }
+</script>
+</body>
+</html>
